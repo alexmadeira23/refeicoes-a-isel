@@ -55,22 +55,24 @@ class FoodViewModel(private val httpClient: OkHttpClient) : ViewModel() {
     private fun handleResponse(res: Response): List<Food> {
         val body = res.body?.string() ?: throw Exception()
         val html = Jsoup.parse(body)
-        val weekFoodsHtml = html.selectFirst(FOOTER_SELECTOR) ?: throw Exception()
+
+        val weekFoodsHtml = html.selectFirst(FOOTER_SELECTOR)
+            ?: return emptyList()
 
         val dayHtml = weekFoodsHtml.children().find {
             it.selectFirst(HEADER_SELECTOR)?.text() == getWeekDayName()
-        } ?: throw Exception()
+        } ?: return emptyList()
 
         return dayHtml.select(FOOD_OPTION_SELECTOR).map { availableFoods ->
             val readFood = availableFoods
                 .selectFirst(FOOD_SELECTOR)
                 ?.selectFirst(SPAN_SELECTOR)
                 ?.selectFirst(A_SELECTOR)
-                ?.text() ?: throw Exception()
+                ?.text() ?: return emptyList()
             val readFoodType = availableFoods
                 .selectFirst(FOOD_TYPE_SELECTOR)
                 ?.selectFirst(A_SELECTOR)
-                ?.text() ?: throw Exception()
+                ?.text() ?: return emptyList()
             Food(type = readFoodType, food = readFood)
         }
     }
