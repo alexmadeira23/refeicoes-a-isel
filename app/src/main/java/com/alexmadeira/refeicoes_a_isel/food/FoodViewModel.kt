@@ -45,15 +45,21 @@ class FoodViewModel(private val httpClient: OkHttpClient) : ViewModel() {
     }
 
     private suspend fun requestFoods(): List<Food> {
-        return Request
-            .Builder()
-            .url(BASE_URL + getWeeksPath())
-            .build()
-            .send(httpClient) { res -> handleResponse(res) }
+        return try {
+            Request
+                .Builder()
+                .url(BASE_URL + getWeeksPath())
+                .build()
+                .send(httpClient) { res -> handleResponse(res) }
+        } catch (e: Throwable) {
+            return emptyList()
+        }
     }
 
     private fun handleResponse(res: Response): List<Food> {
-        val body = res.body?.string() ?: throw Exception()
+        val body = res.body?.string()
+            ?: return emptyList()
+
         val html = Jsoup.parse(body)
 
         val weekFoodsHtml = html.selectFirst(FOOTER_SELECTOR)
